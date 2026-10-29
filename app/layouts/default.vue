@@ -9,7 +9,7 @@ const nav = useTopNavState()
   <div class="flex min-h-screen flex-col">
     <Header v-bind="header ?? {}" />
     <TopNavigation
-      :items="nav"
+      :items="nav ?? undefined"
       v-bind="header ? { siteName: header.siteName, siteUrl: header.siteUrl } : {}"
     />
     <main class="flex-1">

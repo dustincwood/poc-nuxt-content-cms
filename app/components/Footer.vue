@@ -238,7 +238,7 @@ const footerLink = 'text-header-mist hover:text-white hover:underline'
                 <li v-for="link in legalLinks" :key="link.label" :class="footerItem">
                   <a :class="footerLink" :href="link.to">{{ link.label }}</a>
                 </li>
-                <!-- usu.edu's Admin opens the page in Modern Campus; this one opens its story in Storyblok -->
+                <!-- usu.edu's Admin opens the page in Modern Campus; this one opens it in the CMS editor -->
                 <li v-if="editLink" :class="footerItem">
                   <a :class="footerLink" :href="editLink" target="_blank" rel="noopener">Admin</a>
                 </li>

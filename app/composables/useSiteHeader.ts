@@ -1,5 +1,6 @@
 // The site header's names and the top nav for the current page, set by middleware/site-header.global.ts
-// before the page renders, and read by the layout. null: the components show their own defaults.
+// (or the editor's preview) before the page renders, and read by the layout. null: the components show
+// their own defaults.
 export type SiteHeader = {
   siteName: string
   siteUrl: string
@@ -9,8 +10,8 @@ export type SiteHeader = {
 
 export const useSiteHeaderState = () => useState<SiteHeader | null>('site-header', () => null)
 
-// The current page's story in the Storyblok editor (the footer's Admin link, as usu.edu's opens the page in
-// Modern Campus); null on pages without a story
+// The current page in the CMS editor (the footer's Admin link, as usu.edu's opens the page in Modern
+// Campus); null on pages the CMS didn't publish
 export const useEditLinkState = () => useState<string | null>('edit-link', () => null)
 
 // TopNavigation's item shapes (see its demoItems)
@@ -30,8 +31,8 @@ export const useTopNavState = () => useState<NavItem[] | null>('top-nav', () => 
 
 const navLink = (b: any): NavLink => ({
   label: b.label ?? '',
-  to: mocaLinkHref(b.link) || '#',
-  ...(b.link?.target && { target: b.link.target }),
+  to: b.link || '#',
+  ...(b.link_target && { target: b.link_target }),
   ...(b.icon && { icon: faIconName(b.icon) }),
 })
 
@@ -63,4 +64,44 @@ export function navItems(blocks: any[]): NavItem[] {
     const link = navLink(b) as { label: string, to: string, target?: string }
     return { ...link, ...(b.button && { button: true }) }
   })
+}
+
+// What a page carries for the header and nav (its frontmatter, or a draft's fields)
+export type SiteChromeSource = { path: string, header?: CmsPageHeader, top_nav?: any[] }
+
+function headerFrom(source: SiteChromeSource): SiteHeader {
+  const h = source.header!
+  return {
+    siteName: h.site_name!.trim(),
+    // An empty site link points at the page that sets the name
+    siteUrl: h.site_link || source.path,
+    parentName: h.parent_name?.trim() ?? '',
+    parentUrl: h.parent_link || '#',
+  }
+}
+
+// /a/b/c -> /a/b/c, /a/b, /a, /
+export function siteChromePaths(path: string) {
+  const parts = path.split('/').filter(Boolean)
+  return Array.from({ length: parts.length + 1 }, (_, i) => '/' + parts.slice(0, parts.length - i).join('/'))
+}
+
+// Modern Campus gave each folder its own _siteLogo.inc and _topNav.inc; here a page's own fields win, else
+// the nearest page above it that sets them (sources: the page first, then its ancestors). The header and
+// the nav are each inherited on their own (a sub-site can keep its parent's menu but name itself), and
+// the header's four fields go together, so a sub-site never shows another site's parent.
+export function resolveSiteChrome(sources: (SiteChromeSource | undefined)[]) {
+  const named = sources.find(s => s?.header?.site_name?.trim())
+  const menu = sources.find(s => s?.top_nav?.length)
+  return {
+    header: named ? headerFrom(named) : null,
+    nav: menu ? navItems(menu.top_nav!) : null,
+  }
+}
+
+// The published pages at these paths, for resolveSiteChrome
+export async function publishedChromeSources(paths: string[]) {
+  const rows = await queryCollection('pages').where('path', 'IN', paths).select('path', 'header', 'top_nav').all()
+  const byPath = new Map(rows.map(r => [r.path, r as SiteChromeSource]))
+  return paths.map(p => byPath.get(p))
 }

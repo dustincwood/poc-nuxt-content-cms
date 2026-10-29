@@ -1,40 +1,11 @@
-// Shared helpers for the Modern Campus (moca) Storyblok blocks in app/storyblok/moca.
+// Shared helpers for the Modern Campus (moca) components in app/components/content.
 // Class strings are written out in full so Tailwind can find them at build time.
 
-export interface SbLink {
-  linktype?: 'url' | 'story' | 'email' | 'asset'
-  url?: string
-  cached_url?: string
-  email?: string
-  anchor?: string
-  target?: string
-  story?: { full_slug?: string }
-}
+// MDC reads numeric-looking prop values as numbers ("6" -> 6); option props accept both
+export type MocaOption = string | number
 
-export interface SbAsset {
-  filename?: string
-  alt?: string
-}
-
-// Storyblok multilink field -> href ('' when the field is empty)
-export function mocaLinkHref(link?: SbLink | null) {
-  if (!link) return ''
-  if (link.linktype === 'email') return link.email ? `mailto:${link.email}` : ''
-
-  let href = link.url || link.cached_url || ''
-  if (link.linktype === 'story') {
-    const slug = (link.story?.full_slug ?? link.cached_url ?? '').replace(/^\/+/, '')
-    if (!slug) return ''
-    href = slug === 'home' ? '/' : `/${slug}`
-  }
-  if (href && link.anchor) href += `#${link.anchor}`
-  return href
-}
-
-// Empty Storyblok rich text is a doc holding one empty paragraph
-export function hasRichText(doc?: { content?: { type: string, content?: unknown[] }[] } | null) {
-  return !!doc?.content?.some(node => node.type !== 'paragraph' || node.content?.length)
-}
+// A prop value as the option string it was written as
+export const mocaStr = (value?: MocaOption | null) => value === undefined || value === null ? '' : String(value)
 
 // Accepts "fa-solid fa-house", "fas fa-house", or a pasted <i class="fa-solid fa-house"></i>.
 // Returns the matching Iconify name for <UIcon>, e.g. "i-fa6-solid-house".
@@ -324,8 +295,8 @@ export const mocaSpacing: Record<string, Record<string, string>> = {
   'p': { '0': 'p-0', '1': 'p-1', '2': 'p-2', '3': 'p-4', '4': 'p-6', '5': 'p-12' },
 }
 
-// Spacing field value ('' or '0'-'5') -> class
-export function mocaSpace(property: keyof typeof mocaSpacing, value?: string) {
-  return value ? mocaSpacing[property]?.[value] ?? '' : ''
+// Spacing field value ('' or 0-5) -> class
+export function mocaSpace(property: keyof typeof mocaSpacing, value?: MocaOption | null) {
+  const v = mocaStr(value)
+  return v ? mocaSpacing[property]?.[v] ?? '' : ''
 }
-

@@ -1,8 +1,7 @@
 <script setup lang="ts">
-// Storyblok rich text with the usu.edu content styles (Bootstrap 4 element defaults + main.css).
-// Used by the Modern Campus blocks in app/storyblok/moca wherever the original copied WYSIWYG content.
-const props = withDefaults(defineProps<{
-  doc?: any
+// Rich text (a component's markdown slot) with the usu.edu content styles (Bootstrap 4 element defaults +
+// main.css). Wrap the slot: <MocaRichText v-if="$slots.body"><slot name="body" /></MocaRichText>
+withDefaults(defineProps<{
   // hero: paragraphs as styled inside .jumbotron-content (60ch wide, .75rem above, none below);
   // hero-center: the same without the width limit (.jumbotron-content-center)
   variant?: 'default' | 'hero' | 'hero-center'
@@ -13,20 +12,17 @@ const paragraphs = {
   'hero': '[&_p]:mt-3 [&_p]:mb-0 [&_p]:max-w-[60ch]',
   'hero-center': '[&_p]:mt-3 [&_p]:mb-0',
 }
-
-const show = computed(() => hasRichText(props.doc))
 </script>
 
 <template>
   <div
-    v-if="show"
     :class="[
       paragraphs[variant],
       // Content links are underlined on usu.edu (main#content a)
       '[&_a]:text-usu-info [&_a]:underline [&_a:hover]:text-usu-info-dark',
       '[&_strong]:font-bold [&_b]:font-bold [&_em]:italic [&_i]:italic',
       '[&_ul]:list-disc [&_ul_ul]:list-[circle] [&_ul_ul_ul]:list-[square] [&_ol]:list-decimal [&_ul]:mb-4 [&_ol]:mb-4 [&_ul]:pl-10 [&_ol]:pl-10 [&_li_ul]:mb-0 [&_li_ol]:mb-0',
-      // Storyblok wraps each list item's text in a <p>; on usu.edu items have no paragraph spacing
+      // A list item's text may be in a <p> (loose lists); on usu.edu items have no paragraph spacing
       '[&_li>p]:mb-0',
       '[&_:is(h1,h2,h3,h4,h5,h6)]:font-condensed [&_:is(h1,h2,h3,h4,h5,h6)]:font-bold [&_:is(h1,h2,h3,h4,h5,h6)]:leading-[1.2] [&_:is(h1,h2,h3,h4,h5,h6)]:mt-4 [&_:is(h1,h2,h3,h4,h5,h6)]:mb-2',
       // #384660 as on usu.edu; MocaBand sets --moca-heading to white on dark backgrounds
@@ -42,6 +38,6 @@ const show = computed(() => hasRichText(props.doc))
       '[&_p~:is(h2,h3)]:mt-8!',
     ]"
   >
-    <StoryblokRichText :document="doc" />
+    <slot />
   </div>
 </template>
