@@ -1,0 +1,26 @@
+{
+  "name": "poc-storyblok",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "@nuxt/ui": "^4.12.0",
+    "@storyblok/nuxt": "^11.2.1",
+    "nuxt": "^4.6.2",
+    "tailwindcss": "^4.3.3",
+    "vue": "^3.5.44",
+    "vue-router": "^5.4.0"
+  },
+  "devDependencies": {
+    "@storyblok/richtext": "^5.3.3",
+    "entities": "^7.0.1",
+    "ultrahtml": "^1.7.0",
+    "vite-plugin-mkcert": "^2.1.0"
+  }
+}
