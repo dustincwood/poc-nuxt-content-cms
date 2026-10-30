@@ -83,6 +83,14 @@ export function cmsGetPageByPath(path: string) {
   return row ? toRecord(row) : null
 }
 
+// The page live at a path: published there. After a rename, until the page is published again, its
+// old path still serves it; if another page has since been published at that path, that one wins.
+export function cmsGetPublishedAt(path: string) {
+  const row = cmsDb().prepare(`SELECT * FROM pages WHERE published_path = ? AND published IS NOT NULL
+    ORDER BY (path = published_path) DESC, published_at DESC LIMIT 1`).get(path)
+  return row ? toRecord(row) : null
+}
+
 export function cmsCreatePage(path: string, draft: CmsPageDoc) {
   const now = new Date().toISOString()
   const id = randomUUID()

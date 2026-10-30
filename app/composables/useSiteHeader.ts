@@ -99,9 +99,8 @@ export function resolveSiteChrome(sources: (SiteChromeSource | undefined)[]) {
   }
 }
 
-// The published pages at these paths, for resolveSiteChrome
+// The live (published) pages at these paths, for resolveSiteChrome, from the CMS (server/api/cms/live-chrome)
 export async function publishedChromeSources(paths: string[]) {
-  const rows = await queryCollection('pages').where('path', 'IN', paths).select('path', 'header', 'top_nav').all()
-  const byPath = new Map(rows.map(r => [r.path, r as SiteChromeSource]))
-  return paths.map(p => byPath.get(p))
+  const rows = await $fetch<(SiteChromeSource | null)[]>('/api/cms/live-chrome', { query: { paths: paths.join(',') } })
+  return rows.map(r => r ?? undefined)
 }

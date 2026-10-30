@@ -1,7 +1,9 @@
 import { defineCollection, defineContentConfig, z } from '@nuxt/content'
 
 // Published pages: content/<path>/index.md, written by the CMS's Publish (server/utils/cms-publish.ts) from
-// the page JSON in its SQLite database. Edit pages at /admin rather than these files: a publish overwrites them.
+// the page JSON in its SQLite database. The site itself serves published pages from that database
+// (server/utils/cms-live.ts), so a publish is live without a rebuild; these files are the readable copy.
+// Edit pages at /admin rather than these files: a publish overwrites them.
 const link = z.string().optional()
 
 export default defineContentConfig({

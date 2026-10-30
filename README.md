@@ -19,13 +19,16 @@ Then open **/admin**, use **Publish all changes**, and visit `/` or `/advising`.
 ## How it works
 
 ```
- Editor (/admin/edit)                    SQLite (.data/cms.sqlite)            content/ (Nuxt Content)
- ┌──────────────────────┐   autosave    ┌──────────────────────────┐ Publish ┌──────────────────────────┐
- │ component tree       │ ────────────▶ │ pages: draft JSON        │ ──────▶ │ <path>/index.md (MDC)     │──▶ site
- │ inspector            │               │        published JSON    │         └──────────────────────────┘
- │ live preview iframe ◀┼── draft JSON → markdown → MDC parse → same components (unsaved edits included)
- └──────────────────────┘
+ Editor (/admin/edit)                    SQLite (.data/cms.sqlite)
+ ┌──────────────────────┐   autosave    ┌──────────────────────────┐  each request: published JSON →
+ │ component tree       │ ────────────▶ │ pages: draft JSON        │  markdown → MDC parse (cached) ──▶ site
+ │ inspector            │    Publish    │        published JSON    │
+ │ live preview iframe ◀┼─┐ ──────────▶ └──────────────────────────┘  and a copy: content/<path>/index.md
+ └──────────────────────┘ └ draft JSON → markdown → MDC parse → same components (unsaved edits included)
 ```
+
+Publishing is live on the next request, in production too: the site reads published pages from the CMS
+database, not from Nuxt Content's build-time snapshot of `content/`, so nothing is rebuilt or restarted.
 
 - **Page JSON** (`CmsPageDoc` in `shared/utils/cms-registry.ts`): title, description, site header names,
   top navigation, and `body`, a tree of blocks `{ _uid, component, ...fields }`.
@@ -58,9 +61,15 @@ Then open **/admin**, use **Publish all changes**, and visit `/` or `/advising`.
 - **Components** (`app/components/content/Moca*.vue`): props named like the registry's fields; rich text and
   child components arrive as slots. Parents that lay out their children themselves (accordion panels, step
   guide steps, form fields, advisors) read them with `<CmsChildren>`.
-- **Publishing** (`server/utils/cms-publish.ts`) writes `content/<path>/index.md` (`content/index.md` for `/`).
-  Header names and top nav are frontmatter; a page without them inherits the nearest page above it
+- **Publishing** (`server/utils/cms-publish.ts`) records the draft as the page's published version and
+  writes it to `content/<path>/index.md` (`content/index.md` for `/`), a readable copy for git history and
+  for building a site from files.
+- **Serving** (`server/utils/cms-live.ts`, `/api/cms/live`): the catch-all page asks for the page published
+  at its path and renders it with Nuxt Content's `ContentRenderer`. Parsed pages are cached by publish time,
+  so a new publish is picked up by the next request without any cache to clear. Header names and top nav
+  come from the same data (`/api/cms/live-chrome`); a page without them inherits the nearest page above it
   (`app/middleware/site-header.global.ts`).
+- **Renames**: a renamed page keeps being served at its old path until it's published at the new one.
 
 ## The editor
 
@@ -89,9 +98,11 @@ site's top nav from its published usu.edu page.
 
 ## Limits of the proof of concept
 
-- **Production publishing**: Nuxt Content reads `content/` when the site is built. In development a publish
-  shows at once; a production build needs rebuilding (or a deploy hook) after publishing.
+- **The database is the source of truth.** It lives in `.data/`, which is gitignored, so back it up or
+  point `CMS_DB_PATH` somewhere durable. `content/` is a copy written on publish: editing those files by
+  hand doesn't change the site (the next publish overwrites them).
+- **One server**: SQLite on local disk serves one instance. Several instances need a shared database
+  (e.g. Postgres or Turso) behind `server/utils/cms-db.ts`.
 - **No authentication** on `/admin` or `/api/cms/*`.
-- **The drafts database lives in `.data/`**, which is gitignored; published pages are in `content/`.
-  Re-running the import overwrites the imported pages' drafts.
+- Re-running the import overwrites the imported pages' drafts.
 - **Images are URLs**: there's no upload or media library yet.

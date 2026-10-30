@@ -50,6 +50,16 @@ export interface CmsPageHeader {
   parent_link?: string
 }
 
+// A published page as the site renders it: its frontmatter fields and the parsed MDC body
+export interface CmsLivePage {
+  path: string
+  title: string
+  description?: string
+  header?: CmsPageHeader
+  top_nav?: unknown[]
+  body: unknown
+}
+
 // draft: never published; changed: the draft (or its path) differs from what's published
 export type CmsPageStatus = 'draft' | 'published' | 'changed'
 
