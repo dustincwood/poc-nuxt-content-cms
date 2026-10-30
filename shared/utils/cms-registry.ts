@@ -573,6 +573,7 @@ export function cmsNewBlock(name: string): CmsBlock {
   if (name === 'moca-heading') block.text = 'New heading'
   if (name === 'moca-text') block.text = 'New text'
   if (name === 'moca-button') block.text = 'Button'
+  if (name === 'moca-quote') block.quote = 'Quote'
   return block
 }
 
